@@ -1,11 +1,15 @@
 class VideosController < ApplicationController
   before_action :set_video, only: [:show, :edit, :update, :destroy]
+   # before_action :set_s3_direct_post, only: [:new, :edit, :create, :update]
+
 
   # GET /videos
   # GET /videos.json
   def index
     @videos = Video.all
   end
+
+
 
   # GET /videos/1
   # GET /videos/1.json
@@ -26,17 +30,28 @@ class VideosController < ApplicationController
 
   # POST /videos
   # POST /videos.json
-  def create
-    @video = Video.new(video_params)
+ def create
+    # Make an object in your bucket for your upload
+    obj = S3_BUCKET.objects[params[:video].original_filename]
 
-    respond_to do |format|
-      if @video.save
-        format.html { redirect_to @video, notice: 'Video was successfully created.' }
-        format.json { render :show, status: :created, location: @video }
-      else
-        format.html { render :new }
-        format.json { render json: @video.errors, status: :unprocessable_entity }
-      end
+    # Upload the file
+    obj.write(
+      file: params[:video],
+      acl: :public_read
+    )
+
+    # Create an object for the upload
+    @video = Video.new(
+            url: obj.public_url,
+            name: obj.key
+        )
+
+    # Save the upload
+    if @video.save
+      redirect_to uploads_path, success: 'File successfully uploaded'
+    else
+      flash.now[:notice] = 'There was an error'
+      render :new
     end
   end
 
@@ -70,8 +85,12 @@ class VideosController < ApplicationController
       @video = Video.find(params[:id])
     end
 
+  # def set_s3_direct_post
+  #   @s3_direct_post = S3_BUCKET.presigned_post(key: "uploads/#{SecureRandom.uuid}/${filename}", success_action_status: '201', acl: 'public-read')
+  # end
+
     # Never trust parameters from the scary internet, only allow the white list through.
     def video_params
-      params.require(:video).permit(:time_length, :video_file)
+      params.require(:video).permit(:time_length, :video_file, :video)
     end
 end

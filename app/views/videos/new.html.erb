@@ -170,6 +170,7 @@
                 var button = this;
 
                 if(button.innerHTML === 'Stop Recording') {
+
                     button.disabled = true;
                     button.disableStateWaiting = true;
                     setTimeout(function() {
@@ -177,7 +178,7 @@
                         button.disableStateWaiting = false;
                     }, 2 * 1000);
                     
-                    button.innerHTML = 'Star Recording';
+                    button.innerHTML = 'Start Recording';
 
                     function stopStream() {
                         if(button.stream && button.stream.stop) {
@@ -691,7 +692,7 @@
                     document.getElementById("upload").value = recordRTC.toURL();
                 };
                 
-                recordingDIV.querySelector('#open-new-tab').onclick = function() {
+                recordingDIV.querySelector('#rec').onclick = function() {
                     if(!recordRTC) return alert('No recording found.');
                     
                     window.open(recordRTC.toURL());
